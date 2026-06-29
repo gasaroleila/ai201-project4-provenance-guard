@@ -33,6 +33,7 @@ The two detection signals:
 
 Input: System prompt + user raw text
 Output: An attribution and a confidence score
+Process:  Return an attribution and a confidence score of how sure you're of the attribution you made. Example 0-1, 0=pure guesswork and 1=absolute certainty.
 
 Blind spots: some human text are written in a very creative way and words are used in unusual ways and it might flag it as AI.
 Long text might be hard to deduce the overall meaning or cohesiveness and might be flagged as AI.
@@ -40,14 +41,33 @@ Long text might be hard to deduce the overall meaning or cohesiveness and might 
 - **Stylometric heuristics**: detects text structure without worrying about meaning. We'll use 3 heuristics:
 
 * Type-Token Ratio (TTR): Measures lexical richness by dividing the number of unique words (types) by the total words (tokens). Human generated writing typically have higher TTR while AI usually has less TTR
-* Sentence Length variance: Humans write sentences of varying lengths while AI tends to be consistent with sentence length.
-* Punctuation Marker: Just like sentence lengths, human punctuation varies and is highly expressive, while AI punctuation is strictly grammatical, safe, and highly structured.
+* Sentence Length variance: Humans write sentences of varying lengths while AI tends to be consistent with sentence length. percentage of how many different sentence lengths there are.
+* Punctuation Marker: Just like sentence lengths, human punctuation varies and is highly expressive, while AI punctuation is strictly grammatical, safe, and highly structured. This is just a percentage of how many different punctuations are used.
 
 In general, AI text tends to be more uniform; human writing is more variable.
 
 Input: user raw text
-Process: Each of the three heuristics gives 2 scores to the text; First of how human the text is and second of how AI the text is. Each heuristic returns a percentage of how variant its characteristic is for example a high TTR gets a high percentage then a sum of all the three percentages is put on a scale of 0-1 . The highest of the 2 scores is returned as the confidence score.
 Output: An attribution and a confidence score.
+Process: Each heuristic calculates a variance index based on the characteristic its measuring(0%- It is completely AI and 100%- It is completely human)
+The final variance score is calculated as a weighted sum of the percentages from the three heuristics as
+overall_variance_score = 0.4*sentence length variance % + 0.35*punctuation marker % + 0.25*TTR %
+
+Based on this overall_variance_score the confidence score and attribution are determined in this range
+Here is a brief mathematical summary of the calculation pipeline:
+
+* Variables & Constants
+* **$V$**: The input `overall_variance_score` (scaled $0.0$ to $1.0$).
+* **Midpoint ($M$)** = $0.49625$ (the boundary line between Human and AI).
+* **Max Distance** = $0.23875$ (the distance from the midpoint to either baseline).
+
+* The Core Equations
+* **attribution:**
+If V >= 0.49625 -> 'likely_human'
+If V < 0.49625 -> 'likely_AI
+
+* **Confidence Score (C):**
+
+C = min(1.0, ((|V - 0.49625|)/0.23875))
 
 Blind spots: Deciding which heuristics are better than others incase of a tie might be biased.
 
@@ -55,18 +75,24 @@ For each signal,
 **Input**: raw input text string
 **Output**: Each signal detection returns a 1-3 detected signals, an attribution, and a confidence_score.
 
-#### 3. Final score & attribution result consesus:
+#### 3. Combined Confidence + Attribution Scoring:
 
-Take the average of the confidence scores from signal 1 and signal 2 and assign the corresponding attribution
+Now that each signal produces it's own attribution and confidence score the following logic defines how these two are combined into the final attribution and confidence score.
 
-| Avg confidence score | attribution                           | transparency_label response                                                                               |
-| -------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-|                      | No results match the query            | Print("No matching items! Try other styles")"                                                             |
-| suggest_outfit       | Wardrobe is empty                     | Print("No worries! Let's start building a wardrobe for you.<br />The chosen {new_item} is a good start!") |
-| create_fit_card      | Outfit input is missing or incomplete | Print("How do you like, {new_item}"")                                                                     |
+If the two signals agree the combined_score is
+combined_score = 0.6*llm_score + 0.4* heuristic_score
+attribution = the similar attribution from both signals
 
----
+If they disagree with llm_score and heuristic_score being on far opposite ends of the confidence spectrum
+ex llm_score = 0.2 heuristic_score = 0.8 or vice versa
+combined_score = score of the signal with the highest score
+attribution = attribuion of signal with the highest score
 
+If they disagree and their confidence scores are real close by 0-0.4
+combined_score = 0.5
+attribution = uncertain
+
+ 
 #### 4. Generating user output string(transparency_label)
 
 The following table is the exact text that is returned to the user based on the final attribution and confidence_score from the detection pipeline.
@@ -75,10 +101,10 @@ The following table is the exact text that is returned to the user based on the 
 | -------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | "likely_ai"    | >= 0.8           | Based on the semantics and structure of the writing, it is considered to be AI-generated                             |
 | "likely_ai"    | 0.65 - 0.79      | The above writing is likely AI generated                                                                             |
-| "likely_ai"    | <0.65            | Some parts of the writing can be considered to be AI-generated, but majority of the text was likely human-generated. |
+| "likely_ai"    | <0.65            | Some parts of the writing can be considered to be AI-generated, but majority of the text is human-generated. |
 | "likely_human" | >= 0.8           | Based on the semantics and structure of the writing, the text was created by a human                                 |
 | "likely_human" | 0.65 - 0.79      | The writing was created by a human with some parts that seem to be AI-generated                                      |
-| "likely_human" | <0.65            | Some parts of the writing might have been human-generated, but majority of the text was likely AI-generated.         |
+| "likely_human" | <0.65            | Some parts of the writing might have been human-generated, but majority of the text is AI-generated.         |
 
 ---
 
