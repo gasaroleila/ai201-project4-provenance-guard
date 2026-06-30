@@ -8,6 +8,8 @@ from flask_limiter import Limiter
 from dotenv import load_dotenv
 
 from signals.llm_signal import llm_signal
+from signals.stylometric_signal import stylometric_signal
+from signals.combined_scoring import combined_scoring
 
 load_dotenv()
 
@@ -54,18 +56,23 @@ def submit():
         return jsonify({"error": f"Text exceeds {MAX_WORDS}-word limit ({word_count} words)."}), 400
 
     signal1 = llm_signal(text)
+    signal2 = stylometric_signal(text)
+    combined = combined_scoring(signal1, signal2)
 
-    # TODO (M4): run signal 2 (stylometric heuristics)
-    # TODO (M4): combine signal scores into final attribution + confidence
+    print(f"\n[DEBUG] Signal 1 (LLM)         → attribution: {signal1['attribution']}, confidence: {signal1['confidence']}")
+    print(f"[DEBUG] Signal 2 (Stylometric)  → attribution: {signal2['attribution']}, confidence: {signal2['confidence']}")
+    print(f"[DEBUG] Combined ({combined['case']}) → attribution: {combined['attribution']}, confidence: {combined['confidence']}\n")
+
     # TODO (M5): generate transparency_label
 
     result = {
         "content_id": str(uuid.uuid4()),
         "creator_id": creator_id,
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
-        "attribution": signal1["attribution"],
-        "confidence": signal1["confidence"],  # placeholder until combined scoring is added
+        "attribution": combined["attribution"],
+        "confidence": combined["confidence"],
         "llm_score": signal1["confidence"],
+        "heuristic_score": signal2["confidence"],
         "status": "classified",
     }
 

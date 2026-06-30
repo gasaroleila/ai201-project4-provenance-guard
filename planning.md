@@ -44,6 +44,14 @@ Long text might be hard to deduce the overall meaning or cohesiveness and might 
 * Sentence Length variance: Humans write sentences of varying lengths while AI tends to be consistent with sentence length. percentage of how many different sentence lengths there are.
 * Punctuation Marker: Just like sentence lengths, human punctuation varies and is highly expressive, while AI punctuation is strictly grammatical, safe, and highly structured. This is just a percentage of how many different punctuations are used.
 
+  The punctuation marker is a score of these two dimension with the total score calculated as a 50/50 between these two
+
+  1. Punctuation Richness :using this set count the number of punctuations used over the total set. Ex 8/12
+     punctuation_set = ['.', ',', '?', '!', ';', ':', '—', '...', '""', '()', '/', '*']
+  2. Structural Entropy: Calculates the standard deviation of character distances between punctuation marks. ex: an AI-generated text can have punctuation after every 15 words while human-generated is more volatile.
+
+    Final punctuation marker variance = 0.5*punctuation richness + 0.5 * structural entropy.
+
 In general, AI text tends to be more uniform; human writing is more variable.
 
 Input: user raw text
@@ -59,12 +67,10 @@ Here is a brief mathematical summary of the calculation pipeline:
 * **$V$**: The input `overall_variance_score` (scaled $0.0$ to $1.0$).
 * **Midpoint ($M$)** = $0.49625$ (the boundary line between Human and AI).
 * **Max Distance** = $0.23875$ (the distance from the midpoint to either baseline).
-
 * The Core Equations
 * **attribution:**
-If V >= 0.49625 -> 'likely_human'
-If V < 0.49625 -> 'likely_AI
-
+  If V >= 0.49625 -> 'likely_human'
+  If V < 0.49625 -> 'likely_AI
 * **Confidence Score (C):**
 
 C = min(1.0, ((|V - 0.49625|)/0.23875))
@@ -83,27 +89,26 @@ If the two signals agree the combined_score is
 combined_score = 0.6*llm_score + 0.4* heuristic_score
 attribution = the similar attribution from both signals
 
-If they disagree with llm_score and heuristic_score being on far opposite ends of the confidence spectrum
+If  llm_score and heuristic_score disagree and the difference between the two scores > 0.35
 ex llm_score = 0.2 heuristic_score = 0.8 or vice versa
 combined_score = score of the signal with the highest score
-attribution = attribuion of signal with the highest score
+attribution = attribution of signal with the highest score
 
-If they disagree and their confidence scores are real close by 0-0.4
+If they disagree and their confidence scores differ by less than or equal to 0.35
 combined_score = 0.5
 attribution = uncertain
 
- 
 #### 4. Generating user output string(transparency_label)
 
 The following table is the exact text that is returned to the user based on the final attribution and confidence_score from the detection pipeline.
 
-| attribution    | confidence score | transparency_label response                                                                                          |
-| -------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| "likely_ai"    | >= 0.8           | Based on the semantics and structure of the writing, it is considered to be AI-generated                             |
-| "likely_ai"    | 0.65 - 0.79      | The above writing is likely AI generated                                                                             |
+| attribution    | confidence score | transparency_label response                                                                                  |
+| -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| "likely_ai"    | >= 0.8           | Based on the semantics and structure of the writing, it is considered to be AI-generated                     |
+| "likely_ai"    | 0.65 - 0.79      | The above writing is likely AI generated                                                                     |
 | "likely_ai"    | <0.65            | Some parts of the writing can be considered to be AI-generated, but majority of the text is human-generated. |
-| "likely_human" | >= 0.8           | Based on the semantics and structure of the writing, the text was created by a human                                 |
-| "likely_human" | 0.65 - 0.79      | The writing was created by a human with some parts that seem to be AI-generated                                      |
+| "likely_human" | >= 0.8           | Based on the semantics and structure of the writing, the text was created by a human                         |
+| "likely_human" | 0.65 - 0.79      | The writing was created by a human with some parts that seem to be AI-generated                              |
 | "likely_human" | <0.65            | Some parts of the writing might have been human-generated, but majority of the text is AI-generated.         |
 
 ---
