@@ -2,6 +2,9 @@
 
 Provenance Guard: a backend system that any creative sharing platform could plug into to classify submitted content as either AI-generated or human.
 
+# Walkthrough Video
+[Video](https://vimeo.com/1205979844?share=copy&fl=sv&fe=ci)
+
 ## Architecture Overview
 
 This project ended up having two major architecture flows with one being depende on the other, both of them are:
