@@ -10,7 +10,7 @@ A backend system that classifies user input text as either AI or human generated
 
 # Endpoints
 
-## 1. /submission
+## 1. /submit
 
 A POST endpoint on which users submit their text to be classified.
 
@@ -33,7 +33,7 @@ The two detection signals:
 
 Input: System prompt + user raw text
 Output: An attribution and a confidence score
-Process:  Return an attribution and a confidence score of how sure you're of the attribution you made. Example 0-1, 0=pure guesswork and 1=absolute certainty.
+Process: Return an attribution and a confidence score of how sure you're of the attribution you made. Example 0-1, 0=pure guesswork and 1=absolute certainty.
 
 Blind spots: some human text are written in a very creative way and words are used in unusual ways and it might flag it as AI.
 Long text might be hard to deduce the overall meaning or cohesiveness and might be flagged as AI.
@@ -50,7 +50,7 @@ Long text might be hard to deduce the overall meaning or cohesiveness and might 
      punctuation_set = ['.', ',', '?', '!', ';', ':', '—', '...', '""', '()', '/', '*']
   2. Structural Entropy: Calculates the standard deviation of character distances between punctuation marks. ex: an AI-generated text can have punctuation after every 15 words while human-generated is more volatile.
 
-    Final punctuation marker variance = 0.5*punctuation richness + 0.5 * structural entropy.
+  Final punctuation marker variance = 0.5*punctuation richness + 0.5 * structural entropy.
 
 In general, AI text tends to be more uniform; human writing is more variable.
 
@@ -58,20 +58,19 @@ Input: user raw text
 Output: An attribution and a confidence score.
 Process: Each heuristic calculates a variance index based on the characteristic its measuring(0%- It is completely AI and 100%- It is completely human)
 The final variance score is calculated as a weighted sum of the percentages from the three heuristics as
-overall_variance_score = 0.4*sentence length variance % + 0.35*punctuation marker % + 0.25*TTR %
+overall_variance_score = 0.4*sentence length variance % + 0.35*punctuation marker % + 0.25\*TTR %
 
-Based on this overall_variance_score the confidence score and attribution are determined in this range
-Here is a brief mathematical summary of the calculation pipeline:
+Based on this overall_variance_score the confidence score and attribution are determined as follows:
 
-* Variables & Constants
-* **$V$**: The input `overall_variance_score` (scaled $0.0$ to $1.0$).
-* **Midpoint ($M$)** = $0.49625$ (the boundary line between Human and AI).
-* **Max Distance** = $0.23875$ (the distance from the midpoint to either baseline).
-* The Core Equations
-* **attribution:**
+- Variables & Constants
+- **$V$**: The input `overall_variance_score` (scaled $0.0$ to $1.0$).
+- **Midpoint ($M$)** = $0.49625$ (the boundary line between Human and AI).
+- **Max Distance** = $0.23875$ (the distance from the midpoint to either baseline).
+- The Core Equations
+- **attribution:**
   If V >= 0.49625 -> 'likely_human'
   If V < 0.49625 -> 'likely_AI
-* **Confidence Score (C):**
+- **Confidence Score (C):**
 
 C = min(1.0, ((|V - 0.49625|)/0.23875))
 
@@ -89,7 +88,7 @@ If the two signals agree the combined_score is
 combined_score = 0.6*llm_score + 0.4* heuristic_score
 attribution = the similar attribution from both signals
 
-If  llm_score and heuristic_score disagree and the difference between the two scores > 0.35
+If llm_score and heuristic_score disagree and the difference between the two scores > 0.35
 ex llm_score = 0.2 heuristic_score = 0.8 or vice versa
 combined_score = score of the signal with the highest score
 attribution = attribution of signal with the highest score
@@ -100,16 +99,15 @@ attribution = uncertain
 
 #### 4. Generating user output string(transparency_label)
 
-The following table is the exact text that is returned to the user based on the final attribution and confidence_score from the detection pipeline.
+The following table is the exact text/transparency label that is returned to the user based on the final attribution and confidence_score from the detection pipeline.
 
-| attribution    | confidence score | transparency_label response                                                                                  |
-| -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| "likely_ai"    | >= 0.8           | Based on the semantics and structure of the writing, it is considered to be AI-generated                     |
-| "likely_ai"    | 0.65 - 0.79      | The above writing is likely AI generated                                                                     |
-| "likely_ai"    | <0.65            | Some parts of the writing can be considered to be AI-generated, but majority of the text is human-generated. |
-| "likely_human" | >= 0.8           | Based on the semantics and structure of the writing, the text was created by a human                         |
-| "likely_human" | 0.65 - 0.79      | The writing was created by a human with some parts that seem to be AI-generated                              |
-| "likely_human" | <0.65            | Some parts of the writing might have been human-generated, but majority of the text is AI-generated.         |
+| attribution         | confidence score | transparency_label response                                                                                                                                                   |
+| ------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "likely_ai"         | >= 0.75          | Our system has identified strong, highly consistent patterns of AI generation in this text.If this is an error, the creator can file an appeal via their dashboard.           |
+| "likely_ai"         | 0.65 - 0.75      | Our system has detected moderate patterns commonly associated with AI generation tools.If you believe this classification is incorrect, you may submit a quick review appeal. |
+| "likely_human"      | >= 0.75          | Our system is highly confident this content was written by a human creator. No significant patterns of AI generation were detected.                                           |
+| "likely_human"      | 0.65 - 0.75      | Our system is fairly confident this was written by a person. While some parts are uncertain, the overall style looks like natural human writing.                              |
+| "uncertain" DEFAULT | <0.65            | Our system detected highly mixed signals in this text. There is not enough conclusive evidence to definitively classify it.                                                   |
 
 ---
 
@@ -143,7 +141,7 @@ Log format example for signal 2:
 
 ## 2. /appeal
 
-The user submit’s a contend_id and an appeal reasoning to this POST API which changes the status of the given content(if it exists) to "under_review" and return a 200 response with a message to the user that their appeal is under review.
+The user submit’s the content_id and a creator_reasoning(reason they think it was misclassified) to this POST API which changes the status of the given content(if it exists) in the audit_log JSON to "under_review" and return a 200 response with a message to the user that their appeal is under review.
 
 An audit log is appended to /audit_log.json before returning to the user in a format similar to this:
 {
@@ -152,7 +150,7 @@ An audit log is appended to /audit_log.json before returning to the user in a fo
 "timestamp": "2025-04-01T14:32:10.123Z",
 "original_attribution": "likely_ai",
 "original_confidence": 0.78,
-"appeal_reasoning": "..."
+"creator_reasoning": "..."
 "status": "under_review"
 }
 
@@ -181,16 +179,16 @@ The user submit’s a contend_id and appeal reasoning. Log in audit log file thi
 
 **M3 (submission endpoint + first signal):**
 
-I'll provide Claude with the shared definitions, /submission and submission flow architecture section and ask it to create a Flask app skeleton with atleast rate limit checker implemented using flask-limiter and also the first signal function implemented. I'll run the app with 3 inputs directly to test that it returns an expected attribution and confidence score before adding the first signal function into the endpoint.
+I'll provide Claude with the shared definitions, /submit and submission flow architecture section and ask it to create a Flask app skeleton with atleast rate limit checker implemented using flask-limiter and also the first signal function implemented. I'll run the app with 3 inputs directly to test that it returns an expected attribution and confidence score before adding the first signal function into the endpoint.
 
 **M4 (second signal + confidence scoring):**
 
 Which spec sections you'll provide (detection signals + uncertainty representation + diagram), what you'll ask for (second signal function + scoring logic), and what you'll check (do scores vary meaningfully between clearly AI and clearly human text?).
 
-I'll provide claude with /submission and submission flow architecture and ask it to implement code for the second signal and the logic to combine the two scores from the Final score & attribution result consesus section to produce the combined final confidence score and attribution_result.
+I'll provide claude with /submit and submission flow architecture and ask it to implement code for the second signal and the logic to combine the two scores from the Final score & attribution result consesus section to produce the combined final confidence score and attribution_result.
 
 **M5 (production layer):**
 
 Which spec sections you'll provide (label variants + appeals workflow + diagram), what you'll ask for (label generation logic + the /appeal endpoint), and how you'll verify (test all three label variants are reachable and that an appeal updates status correctly).
 
-I'll provide Claude with the /appeal section and Appeal Flow Architecture section and I'll ask it to use the Generating user output string section to generate a transparency_label using the confidence score from M4. Then I'll have it implement the /appeal workflow using /appeal and Appeal Flow Architecture diagram. The third thing is to implement rate limiting and the complete audit logging the section /submission will be given to Claude for these last 2 things. I'll run like 5 input texts through the /submission API to test how consistent it is and particularly how it handles uncertain cases. Then I'll ran 3 tests for /appeal.
+I'll provide Claude with the /appeal section and Appeal Flow Architecture section and I'll ask it to use the Generating user output string section to generate a transparency_label using the confidence score from M4. Then I'll have it implement the /appeal workflow using /appeal and Appeal Flow Architecture diagram. The third thing is to implement rate limiting and the complete audit logging the section /submit will be given to Claude for these last 2 things. I'll run like 5 input texts through the /submit API to test how consistent it is and particularly how it handles uncertain cases. Then I'll ran 3 tests for /appeal.

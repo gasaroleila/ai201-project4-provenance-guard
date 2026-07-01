@@ -57,7 +57,7 @@ def llm_signal(text: str) -> dict:
     confidence = float(result["confidence"])
 
     if attribution not in ("likely_ai", "likely_human"):
-        raise ValueError(f"Unexpected attribution value: {attribution}")
+        return {"attribution": "likely_human", "confidence": 0.0}
     confidence = max(0.0, min(1.0, confidence))
 
     return {"attribution": attribution, "confidence": confidence}

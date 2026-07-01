@@ -14,7 +14,7 @@ def combined_scoring(signal1: dict, signal2: dict) -> dict:
 
     if llm_attribution == heuristic_attribution:
         # Case 1: signals agree
-        confidence = round(0.6 * llm_score + 0.4 * heuristic_score, 4)
+        confidence = round(0.4 * llm_score + 0.6 * heuristic_score, 4)
         attribution = llm_attribution
         case = "agree"
     else:

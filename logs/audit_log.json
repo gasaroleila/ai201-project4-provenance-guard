@@ -53,7 +53,7 @@
     "confidence": 0.9254,
     "llm_score": 0.57,
     "heuristic_score": 0.9254,
-    "status": "classified"
+    "status": "under_review"
   },
   {
     "content_id": "59287730-cbd8-4b25-ab0e-cc3e1c75ce1f",
@@ -64,5 +64,123 @@
     "llm_score": 0.8,
     "heuristic_score": 1.0,
     "status": "classified"
+  },
+  {
+    "content_id": "a5cc2d97-45d1-41c9-9405-96962bf251e6",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-06-30T20:02:27.804Z",
+    "original_attribution": "likely_human",
+    "original_confidence": 0.9254,
+    "creator_reasoning": "I think this content is AI generated, it's very formal",
+    "status": "under_review"
+  },
+  {
+    "content_id": "f6ce7b3f-3199-417e-a56a-af689c90768d",
+    "creator_id": "ratelimit-test",
+    "timestamp": "2026-06-30T20:17:56.520Z",
+    "attribution": "likely_human",
+    "confidence": 0.0936,
+    "llm_score": 0.0,
+    "heuristic_score": 0.2339,
+    "status": "classified"
+  },
+  {
+    "content_id": "e65c0af1-ccdf-48e7-b636-194869d186db",
+    "creator_id": "ratelimit-test",
+    "timestamp": "2026-06-30T20:17:58.820Z",
+    "attribution": "likely_human",
+    "confidence": 0.0936,
+    "llm_score": 0.0,
+    "heuristic_score": 0.2339,
+    "status": "classified"
+  },
+  {
+    "content_id": "cd2cce81-dd92-4042-a8c0-620f3b225e28",
+    "creator_id": "ratelimit-test",
+    "timestamp": "2026-06-30T20:18:01.458Z",
+    "attribution": "likely_human",
+    "confidence": 0.0936,
+    "llm_score": 0.0,
+    "heuristic_score": 0.2339,
+    "status": "classified"
+  },
+  {
+    "content_id": "70e15b29-742e-4b9e-8100-f88f9246fdb6",
+    "creator_id": "ratelimit-test",
+    "timestamp": "2026-06-30T20:18:03.322Z",
+    "attribution": "uncertain",
+    "confidence": 0.5,
+    "llm_score": 0.2,
+    "heuristic_score": 0.2339,
+    "status": "classified"
+  },
+  {
+    "content_id": "4a877bd0-8790-4dbe-9826-c0d85fc6d8a6",
+    "creator_id": "ratelimit-test",
+    "timestamp": "2026-06-30T20:18:05.063Z",
+    "attribution": "likely_human",
+    "confidence": 0.0936,
+    "llm_score": 0.0,
+    "heuristic_score": 0.2339,
+    "status": "classified"
+  },
+  {
+    "content_id": "74d71ffd-a9bb-449d-954a-2e6a57dc5b9d",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-06-30T21:17:16.777Z",
+    "attribution": "likely_human",
+    "confidence": 0.9954,
+    "llm_score": 0.63,
+    "heuristic_score": 0.9954,
+    "status": "classified"
+  },
+  {
+    "content_id": "e6b24d00-e352-42cf-99c4-ba2fb7d37926",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-06-30T21:18:35.213Z",
+    "attribution": "likely_human",
+    "confidence": 0.89,
+    "llm_score": 0.89,
+    "heuristic_score": 0.5071,
+    "status": "classified"
+  },
+  {
+    "content_id": "137b1995-800f-42fc-9ceb-7d1bb3d96f8d",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-06-30T21:19:28.877Z",
+    "attribution": "likely_human",
+    "confidence": 0.89,
+    "llm_score": 0.89,
+    "heuristic_score": 0.5071,
+    "status": "classified"
+  },
+  {
+    "content_id": "3bcf59a5-6568-4e50-b48f-6604e453f504",
+    "creator_id": "test-user-4",
+    "timestamp": "2026-06-30T21:19:42.495Z",
+    "attribution": "uncertain",
+    "confidence": 0.5,
+    "llm_score": 0.8,
+    "heuristic_score": 0.5071,
+    "status": "classified"
+  },
+  {
+    "content_id": "b71f953f-75b9-431a-a3a9-fd1a19fc995d",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-07-01T00:01:28.843Z",
+    "attribution": "likely_human",
+    "confidence": 1.0,
+    "llm_score": 0.43,
+    "heuristic_score": 1.0,
+    "status": "under_review"
+  },
+  {
+    "content_id": "b71f953f-75b9-431a-a3a9-fd1a19fc995d",
+    "creator_id": "test-user-3",
+    "timestamp": "2026-07-01T00:03:18.196Z",
+    "original_attribution": "likely_human",
+    "original_confidence": 1.0,
+    "creator_reasoning": "I think this content is AI generated, it's very formal",
+    "status": "under_review"
   }
 ]
